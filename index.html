@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>京都・大阪 母女行</title>
+<title>媽媽與阿萱快樂出遊</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
@@ -399,25 +399,32 @@
     background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:18px 18px;
+    padding:14px 18px;
     text-align:left;
     cursor:pointer;
   }
   .guide-cat-btn .gc-text{
     display:flex;
-    flex-direction:column;
-    gap:3px;
+    align-items:baseline;
+    gap:9px;
+    min-width:0;
   }
   .guide-cat-btn .gc-name{
     font-family:'Noto Sans TC', sans-serif;
     font-size:17.5px;
     font-weight:700;
     color:var(--ink);
+    flex:0 0 auto;
+    white-space:nowrap;
   }
   .guide-cat-btn .gc-sub{
     font-family:'Noto Sans TC', sans-serif;
     font-size:13px;
     color:var(--ink-soft);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
   }
   .guide-cat-btn .gc-chevron{
     flex:0 0 auto;
@@ -1863,7 +1870,7 @@
 
   <section class="tab-page" data-tabpage="guide" hidden>
     <div class="guide-grid" data-guidegrid>
-      <div class="guide-cat-btn" data-guidecat="飯店"><div class="gc-text"><span class="gc-name">飯店</span><span class="gc-sub">住宿資訊與房型介紹</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="交通"><div class="gc-text"><span class="gc-name">交通</span><span class="gc-sub">交通卡、叫車、搭乘禮儀</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="支付"><div class="gc-text"><span class="gc-name">支付</span><span class="gc-sub">付款方式與退稅</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="天氣"><div class="gc-text"><span class="gc-name">天氣</span><span class="gc-sub">氣溫與穿搭建議</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="插座"><div class="gc-text"><span class="gc-name">插座</span><span class="gc-sub">電壓與插頭規格</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="實用日文"><div class="gc-text"><span class="gc-name">實用日文</span><span class="gc-sub">常用短句，附發音</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="緊急聯絡"><div class="gc-text"><span class="gc-name">緊急聯絡</span><span class="gc-sub">警消號碼、辦事處聯絡方式</span></div><div class="gc-chevron"></div></div>
+      <div class="guide-cat-btn" data-guidecat="飯店"><div class="gc-text"><span class="gc-name">飯店</span><span class="gc-sub">住宿資訊與房型介紹</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="交通"><div class="gc-text"><span class="gc-name">交通</span><span class="gc-sub">交通卡、叫車、搭乘禮儀</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="支付"><div class="gc-text"><span class="gc-name">支付</span><span class="gc-sub">付款方式與退稅</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="天氣"><div class="gc-text"><span class="gc-name">天氣</span><span class="gc-sub">氣溫與穿搭建議</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="插座"><div class="gc-text"><span class="gc-name">插座</span><span class="gc-sub">電壓與插頭規格</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="實用日文"><div class="gc-text"><span class="gc-name">實用日文</span><span class="gc-sub">常用短句附發音</span></div><div class="gc-chevron"></div></div><div class="guide-cat-btn" data-guidecat="緊急聯絡"><div class="gc-text"><span class="gc-name">緊急聯絡</span><span class="gc-sub">警消辦事處聯絡</span></div><div class="gc-chevron"></div></div>
     </div>
     <div class="guide-page" data-guidepage="飯店">
       <div class="guide-back" data-guideback>
