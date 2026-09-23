@@ -2962,11 +2962,12 @@
     });
     breakdown.innerHTML = CATS.map(c=>{
       const entries = byCatEntries[c] || [];
-      const v = byCat[c];
-      const parts = [];
-      if(v.JPY) parts.push(`¥${Math.round(v.JPY).toLocaleString('zh-Hant')}`);
-      if(v.TWD) parts.push(`NT$${Math.round(v.TWD).toLocaleString('zh-Hant')}`);
-      const amountText = parts.length ? parts.join(' ・ ') : '—';
+      let catTwd = 0;
+      entries.forEach(e=>{
+        if(e.currency === 'TWD') catTwd += Number(e.amount);
+        else if(e.rate_to_twd) catTwd += Number(e.amount) * Number(e.rate_to_twd);
+      });
+      const amountText = entries.length ? `NT$${Math.round(catTwd).toLocaleString('zh-Hant')}` : '—';
       if(entries.length === 0){
         return `<div class="cat-row"><div class="name">${c}</div><div class="amounts">—</div></div>`;
       }
