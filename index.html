@@ -795,6 +795,77 @@
     text-align:right;
   }
 
+  .cat-block{
+    border-top:1px solid var(--line);
+  }
+  .cat-block:first-child{
+    border-top:none;
+  }
+  .cat-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:13px 0;
+    cursor:pointer;
+    user-select:none;
+  }
+  .cat-head .name{
+    font-size:14.5px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .cat-head-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .cat-head-right .amounts{
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .cat-chevron{
+    flex:0 0 auto;
+    width:7px;
+    height:7px;
+    border-right:1.6px solid var(--ai-soft);
+    border-bottom:1.6px solid var(--ai-soft);
+    transform:rotate(45deg);
+    transition:transform .25s ease;
+  }
+  .cat-block.open .cat-chevron{
+    transform:rotate(-135deg);
+  }
+  .cat-items{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .25s ease;
+  }
+  .cat-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 0 9px 4px;
+    border-top:1px solid var(--line);
+  }
+  .cat-item:first-child{
+    border-top:none;
+  }
+  .ci-note{
+    font-size:13px;
+    color:var(--ink-soft);
+    min-width:0;
+    flex:1;
+  }
+  .ci-amount{
+    flex:0 0 auto;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+
   .weather-list{
     background:var(--card);
     border:1px solid var(--line);
@@ -2738,6 +2809,32 @@
   }
 
   let selectedCat = null;
+
+  // delegated toggle for category breakdown (content is regenerated on every renderOverview call)
+  document.querySelector('[data-overview-breakdown]').addEventListener('click', (e)=>{
+    const head = e.target.closest('[data-cattoggle]');
+    if(!head) return;
+    const block = head.closest('[data-catblock]');
+    const items = block.querySelector('[data-catitems]');
+    const isOpen = block.classList.contains('open');
+
+    document.querySelectorAll('[data-catblock].open').forEach(other=>{
+      if(other === block) return;
+      const oi = other.querySelector('[data-catitems]');
+      oi.style.maxHeight = oi.scrollHeight + 'px';
+      requestAnimationFrame(()=>{ oi.style.maxHeight = '0px'; });
+      other.classList.remove('open');
+    });
+
+    if(isOpen){
+      items.style.maxHeight = items.scrollHeight + 'px';
+      requestAnimationFrame(()=>{ items.style.maxHeight = '0px'; });
+      block.classList.remove('open');
+    } else {
+      block.classList.add('open');
+      items.style.maxHeight = items.scrollHeight + 'px';
+    }
+  });
   let selectedCurrency = 'JPY';
 
   document.querySelectorAll('[data-expensecats] .chip').forEach(chip=>{
@@ -2814,23 +2911,18 @@
     });
   }
 
-  const FX_CACHE_KEY = 'jazy_fx_cache_v1';
+  const FX_CACHE_KEY = 'jazy_fx_latest_v1'; // {rate, fetchedAt} cached briefly to avoid refetching on every keystroke
 
-  function loadFxCache(){
-    try{ return JSON.parse(localStorage.getItem(FX_CACHE_KEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function saveFxCache(cache){
-    try{ localStorage.setItem(FX_CACHE_KEY, JSON.stringify(cache)); }
-    catch(e){}
-  }
-
-  async function getJpyToTwdRate(dateStr){
-    const cache = loadFxCache();
-    if(cache[dateStr]) return cache[dateStr];
+  async function getLatestJpyToTwdRate(){
+    try{
+      const cached = JSON.parse(localStorage.getItem(FX_CACHE_KEY) || 'null');
+      if(cached && (Date.now() - cached.fetchedAt) < 1000 * 60 * 60){ // reuse within 1 hour
+        return cached.rate;
+      }
+    }catch(e){}
     const urls = [
-      `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${dateStr}/v1/currencies/jpy.json`,
-      `https://currency-api.pages.dev/npm/@fawazahmed0/currency-api@${dateStr}/v1/currencies/jpy.json`
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/jpy.json',
+      'https://latest.currency-api.pages.dev/v1/currencies/jpy.json'
     ];
     for(const url of urls){
       try{
@@ -2839,8 +2931,7 @@
         const data = await res.json();
         const rate = data.jpy && data.jpy.twd;
         if(rate){
-          cache[dateStr] = rate;
-          saveFxCache(cache);
+          try{ localStorage.setItem(FX_CACHE_KEY, JSON.stringify({rate, fetchedAt: Date.now()})); }catch(e){}
           return rate;
         }
       }catch(e){ /* try next mirror */ }
@@ -2848,7 +2939,7 @@
     return null;
   }
 
-  async function renderOverview(){
+  function renderOverview(){
     const list = expenseCache;
     let jpyTotal = 0, twdTotal = 0;
     const byCat = {};
@@ -2863,16 +2954,36 @@
     document.querySelector('[data-overview-twd]').textContent = `NT$${Math.round(twdTotal).toLocaleString('zh-Hant')}`;
 
     const breakdown = document.querySelector('[data-overview-breakdown]');
+    const byCatEntries = {};
+    CATS.forEach(c => byCatEntries[c] = []);
+    list.forEach(e=>{
+      if(!byCatEntries[e.category]) byCatEntries[e.category] = [];
+      byCatEntries[e.category].push(e);
+    });
     breakdown.innerHTML = CATS.map(c=>{
+      const entries = byCatEntries[c] || [];
       const v = byCat[c];
       const parts = [];
       if(v.JPY) parts.push(`¥${Math.round(v.JPY).toLocaleString('zh-Hant')}`);
       if(v.TWD) parts.push(`NT$${Math.round(v.TWD).toLocaleString('zh-Hant')}`);
       const amountText = parts.length ? parts.join(' ・ ') : '—';
-      return `<div class="cat-row"><div class="name">${c}</div><div class="amounts">${amountText}</div></div>`;
+      if(entries.length === 0){
+        return `<div class="cat-row"><div class="name">${c}</div><div class="amounts">—</div></div>`;
+      }
+      const itemsHtml = entries.map(e=>{
+        const noteText = e.note ? e.note.replace(/</g,'&lt;') : '（無備註）';
+        return `<div class="cat-item"><span class="ci-note">${noteText}</span><span class="ci-amount">${fmtAmount(e.amount, e.currency)}</span></div>`;
+      }).join('');
+      return `<div class="cat-block" data-catblock>
+        <div class="cat-head" data-cattoggle>
+          <div class="name">${c}</div>
+          <div class="cat-head-right"><span class="amounts">${amountText}</span><span class="cat-chevron"></span></div>
+        </div>
+        <div class="cat-items" data-catitems>${itemsHtml}</div>
+      </div>`;
     }).join('');
 
-    // grand total in TWD, converting each JPY entry at its recorded day's rate
+    // grand total in TWD, using the rate stored on each JPY entry at the time it was added
     const grandEl = document.querySelector('[data-overview-grand]');
     const hintEl = document.querySelector('[data-overview-grand-hint]');
     const jpyEntries = list.filter(e => e.currency === 'JPY');
@@ -2883,26 +2994,20 @@
       return;
     }
 
-    grandEl.textContent = '計算中…';
-    hintEl.textContent = '依紀錄當天匯率換算';
-
-    const dates = [...new Set(jpyEntries.map(e => e.created_at.slice(0,10)))];
-    const rates = {};
-    await Promise.all(dates.map(async d => { rates[d] = await getJpyToTwdRate(d); }));
-
-    let convertedJpy = 0, failedAny = false;
+    let convertedJpy = 0, missingCount = 0;
     jpyEntries.forEach(e=>{
-      const d = e.created_at.slice(0,10);
-      const r = rates[d];
-      if(r) convertedJpy += Number(e.amount) * r;
-      else failedAny = true;
+      if(e.rate_to_twd){
+        convertedJpy += Number(e.amount) * Number(e.rate_to_twd);
+      } else {
+        missingCount++;
+      }
     });
 
     const grand = twdTotal + convertedJpy;
     grandEl.textContent = `NT$${Math.round(grand).toLocaleString('zh-Hant')}`;
-    hintEl.textContent = failedAny
-      ? '部分日幣紀錄匯率抓取失敗，總額可能不完整（需要網路連線）'
-      : '依紀錄當天匯率換算';
+    hintEl.textContent = missingCount > 0
+      ? `有 ${missingCount} 筆日幣紀錄沒存到當下匯率，總額可能不完整`
+      : '依新增當下的匯率換算';
   }
 
   document.querySelector('[data-expenseadd]').addEventListener('click', async ()=>{
@@ -2923,11 +3028,16 @@
     addBtn.disabled = true;
     addBtn.textContent = '儲存中…';
     try{
+      let rate = null;
+      if(selectedCurrency === 'JPY'){
+        rate = await getLatestJpyToTwdRate();
+      }
       await addExpense({
         category: selectedCat,
         amount: amount,
         currency: selectedCurrency,
-        note: noteInput.value.trim()
+        note: noteInput.value.trim(),
+        rate_to_twd: rate
       });
       amountInput.value = '';
       noteInput.value = '';
